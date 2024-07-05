@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monobloc, the Game</title>
+<style>
+    .counter {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div class="counter">Monoblocs 🪑 in Stock: <span id="countMonoblocSpanTag">0</span></div>
+<button onclick="increaseCounter()">Make Monobloc</button>
+<button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button>
+<button onclick="increaseSpeed()">Increase production Speed</button>
+<button onclick="decreaseSpeed()">Decrease production Speed</button>
+<div class="counter">Granules available: <span id="granulesavailableSpanTag">10</span></div>
+<button onclick="buyGranules()">Buy Granules</button>
+<button onclick="toggleAutobuyGranules()">Toggle automatic Buy Granules</button><span id="autobuyGranulesEnabled"></span>
+<!--<button onclick="autobuyGranules()">Toggle automatic Buy Granules</button>-->
+<br><br>
+<div class="counter">Available Funds: <span id="money">1000</span> $</div>
+<br>
+<button onclick="sell()">Sell Monobloc</button>
+<div id="placeholderForAsciiArt"></div>
+
+<!-- Einbinden der separaten JavaScript-Datei -->
+<script src="asciiArt.js"></script>
+<script>
+    let countMonobloc = 0;
+    let intervalId;          // ID des Timers. Hätte man bspw. 2 Timer, könnte man durch die ID sagen, welchen man stoppen will
+    let intervalTime = 1000; // Zeit in Milisekunden, die vergeht, bis nächster Monobloc gebaut wird
+    let granulesavailable = 10;
+    let money = 1000;
+    let autoIncreaseEnabled = false;
+    let autobuyGranulesEnabled = false;
+
+
+    function updateDisplay() {
+        document.getElementById("countMonoblocSpanTag").textContent = countMonobloc;
+        document.getElementById("granulesavailableSpanTag").textContent = granulesavailable;
+        document.getElementById("money").textContent = money;
+        if(autobuyGranulesEnabled == true){
+            document.getElementById("autobuyGranulesEnabled").textContent = "Enabled";
+        }
+        else{
+            document.getElementById("autobuyGranulesEnabled").textContent = "Disabled";
+        }
+    }
+
+    function increaseCounter() {
+        if (granulesavailable>0){  //verhindert dass Granulat unter 0 Geht 
+                               
+            countMonobloc++;        //Neuer Monobloc
+            granulesavailable--;    //Ein Granulat weniger
+            checkAndBuyGranules();  //Wenn autobuy an ist: Gegebenenfalls nachkaufen
+            updateDisplay();        //Alle werte im HTML setzen
+        }
+        else { //Wenn kein Granulat mehr da:
+            clearInterval(intervalId);  //Stoppen des Timers, der automatisch Monoblocs baut
+            autoIncreaseEnabled = false;//Deaktivieren der Variable, die ausgibt, ob autobuilder an ist
+            alert("No more granules available, buy new granules")
+        }
+    }
+
+    function toggleAutoIncrease() {
+        autoIncreaseEnabled = !autoIncreaseEnabled;
+        if (autoIncreaseEnabled) {
+            intervalId = setInterval(increaseCounter, intervalTime);
+        } else {
+            clearInterval(intervalId);
+               }
+    }
+
+    function increaseSpeed() {
+        //intervalTime: Zeit in Millisekunden, die vergeht, bis nächster Monobloc gebaut wird
+        if (intervalTime > 100) { // schneller als 1x pro 100ms kann der Autobuilder nicht werden
+            intervalTime -= 100;
+            if (autoIncreaseEnabled) {
+                //Stoppen des alten Timers (Mit der alten Milisekunden Zahl) und Starten eines neuen Timers
+                clearInterval(intervalId);
+                intervalId = setInterval(increaseCounter, intervalTime);
+            }
+        }
+    }
+
+    function decreaseSpeed() {
+        if (intervalTime < 1000) { // langsamer als 1x pro 1000ms (1Sekunde) kann der Autobuilder nicht werden
+            intervalTime += 100;
+            if (autoIncreaseEnabled) {
+                clearInterval(intervalId);
+                intervalId = setInterval(increaseCounter, intervalTime);
+            }
+        }
+    }
+
+    function buyGranules() {
+        if(money > 0)
+        {
+            granulesavailable+=10;
+            money--;
+            updateDisplay();
+        }
+        else{
+            alert("Not enough funds available");
+        }
+                           }
+
+    function sell() {
+        if (countMonobloc>0)   // verhindert dass man nicht vorhandene Monoblocs verkauft, der Counter nicht unter "0" fällt
+        {
+            countMonobloc-=1;
+            money+=5;
+            updateDisplay();
+        }
+        else {
+            alert("No Monoblocs to sell!")
+        }
+    }
+
+    function toggleAutobuyGranules() {
+        autobuyGranulesEnabled = !autobuyGranulesEnabled;//Dreht den Wert um: Wenn vorher an war, dann aus. Und umgedreht.
+        checkAndBuyGranules();
+        updateDisplay();
+    }
+
+
+    function checkAndBuyGranules() {
+        //Wenn autobuyer an und wir keine Granules mehr haben: Versuche, welche zu kaufen
+        if (autobuyGranulesEnabled == true && granulesavailable < 1) {
+            buyGranules();
+        }
+    }
+
+    //Alles, was ganz zu Beginn einmal passiert
+    function initialize(){
+        updateDisplay();
+        //Hier machen wir .innerHTML, damit der die <br> Tags verarbeitet, statt sie anzuzeigen
+        document.getElementById("placeholderForAsciiArt").innerHTML = getAsciiArt();
+        //Machen wir den Stuhl etwas kleiner: 5 Pixel pro Zeichen
+        document.getElementById("placeholderForAsciiArt").style.fontSize="5px";
+    }
+
+initialize();
+</script>
+
+</body>
+</html>
+
+
