@@ -16,8 +16,9 @@
 <div class="counter">Monoblocs 🪑 in Stock: <span id="countMonoblocSpanTag">0</span></div>
 <button onclick="increaseCounter()">Make Monobloc</button>
 <button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button>
-<button onclick="increaseSpeed()">Increase production Speed</button>
-<button onclick="decreaseSpeed()">Decrease production Speed</button>
+<div class="ProductionSpeed">
+    <input type="range" min="1" max="100" value="1" class="slider" id="productionspeedid">
+  </div>
 <div class="counter">Granules available: <span id="granulesavailableSpanTag">10</span></div>
 <button onclick="buyGranules()">Buy Granules</button>
 <button onclick="toggleAutobuyGranules()">Toggle automatic Buy Granules</button><span id="autobuyGranulesEnabled"></span>
@@ -38,6 +39,7 @@
     let money = 300;
     let autoIncreaseEnabled = false;
     let autobuyGranulesEnabled = false;
+    var slider = document.getElementById("productionspeedid");
 
 
     function updateDisplay() {
@@ -74,6 +76,15 @@
         } else {
             clearInterval(intervalId);
                }
+    }
+
+    slider.oninput = function() {
+  intervalTime = 100-this.value;
+  console.log(this.value);
+  if (autoIncreaseEnabled) {
+                clearInterval(intervalId);
+                intervalId = setInterval(increaseCounter, intervalTime);
+            }
     }
 
     function increaseSpeed() {
