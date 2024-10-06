@@ -28,6 +28,7 @@
 <br>
 <button onclick="sell()">Sell Monobloc</button>
 <div id="placeholderForAsciiArt"></div>
+<div id="errorMessagesId"></div>
 
 <!-- Einbinden der separaten JavaScript-Datei -->
 <script src="asciiArt.js"></script>
@@ -36,7 +37,7 @@
     let intervalId;          // ID des Timers. Hätte man bspw. 2 Timer, könnte man durch die ID sagen, welchen man stoppen will
     let intervalTime = 1000; // Zeit in Milisekunden, die vergeht, bis nächster Monobloc gebaut wird
     let granulesavailable = 10;
-    let money = 300;
+    let money = 30;
     let autoIncreaseEnabled = false;
     let autobuyGranulesEnabled = false;
     var slider = document.getElementById("productionspeedid");
@@ -52,6 +53,8 @@
         else{
             document.getElementById("autobuyGranulesEnabled").textContent = "Disabled";
         }
+        document.getElementById("errorMessagesId").innerText="";
+        document.getElementById("errorMessagesId").style.color = "Red";
     }
 
     function increaseCounter() {
@@ -65,7 +68,8 @@
         else { //Wenn kein Granulat mehr da:
             clearInterval(intervalId);  //Stoppen des Timers, der automatisch Monoblocs baut
             autoIncreaseEnabled = false;//Deaktivieren der Variable, die ausgibt, ob autobuilder an ist
-            alert("No more granules available, buy new granules")
+            
+            displayErrorMessage("No more granules available, buy new granules");
         }
     }
 
@@ -117,7 +121,7 @@
             updateDisplay();
         }
         else{
-            alert("Not enough funds available");
+            displayErrorMessage("Not enough funds available")
         }
                            }
 
@@ -129,7 +133,7 @@
             updateDisplay();
         }
         else {
-            alert("No Monoblocs to sell!")
+            displayErrorMessage("No Monoblocs to sell!")
         }
     }
 
@@ -154,6 +158,12 @@
         document.getElementById("placeholderForAsciiArt").innerHTML = getAsciiArt();
         //Machen wir den Stuhl etwas kleiner: 5 Pixel pro Zeichen
         document.getElementById("placeholderForAsciiArt").style.fontSize="5px";
+    }
+
+    function displayErrorMessage(message){
+        if(!document.getElementById("errorMessagesId").innerText.includes(message)){
+            document.getElementById("errorMessagesId").innerText += "\n"+message;
+        }
     }
 
 initialize();
