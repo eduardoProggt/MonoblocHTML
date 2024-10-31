@@ -18,6 +18,7 @@
 <button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button><span id="autoIncreaseEnabled"></span>
 <div class="ProductionSpeed">
     <input type="range" min="1" max="100" value="1" class="slider" id="productionspeedid">
+    <span id="productionSpeedInPercent"></span>
   </div>
 <div class="counter">Granules available: <span id="granulesavailableSpanTag">10</span></div>
 <button onclick="buyGranules()">Buy Granules</button>
@@ -47,7 +48,9 @@
         document.getElementById("countMonoblocSpanTag").textContent = countMonobloc;
         document.getElementById("granulesavailableSpanTag").textContent = granulesavailable;
         document.getElementById("money").textContent = money;
-        if(autobuyGranulesEnabled == true){
+        showEnabledDisabled(autobuyGranulesEnabled, "autobuyGranulesEnabled");
+        showEnabledDisabled(autoIncreaseEnabled, "autoIncreaseEnabled");
+ /*       if(autobuyGranulesEnabled == true){
             document.getElementById("autobuyGranulesEnabled").textContent = "Enabled";
         }
         else{
@@ -58,9 +61,18 @@
         }
         else{
             document.getElementById("autoIncreaseEnabled").textContent = "Disabled";
-        }
+        }*/
+        document.getElementById("productionSpeedInPercent").innerText = slider.value + "%";
         document.getElementById("errorMessagesId").innerText="";
         document.getElementById("errorMessagesId").style.color = "Red";
+    }
+    function showEnabledDisabled(isEnabled,id){
+        if(isEnabled == true){
+            document.getElementById(id).textContent = "Enabled";
+        }
+        else{
+            document.getElementById(id).textContent = "Disabled";
+        }
     }
 
     function increaseCounter() {
@@ -90,12 +102,13 @@
     }
 
     slider.oninput = function() {
-  intervalTime = 100-this.value;
-  console.log(this.value);
-  if (autoIncreaseEnabled) {
-                clearInterval(intervalId);
-                intervalId = setInterval(increaseCounter, intervalTime);
-            }
+        intervalTime = 100-this.value;
+        console.log(this.value);
+        if (autoIncreaseEnabled) {
+            clearInterval(intervalId);
+            intervalId = setInterval(increaseCounter, intervalTime);
+        }
+        updateDisplay();
     }
 
     function increaseSpeed() {
