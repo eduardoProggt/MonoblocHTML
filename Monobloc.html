@@ -14,12 +14,13 @@
 <body>
 
 <div class="counter">Monoblocs 🪑 in Stock: <span id="countMonoblocSpanTag">0</span></div>
-<button onclick="increaseCounter()">Make Monobloc</button>
+<button onclick="produceMonobloc()">Make Monobloc</button>
 <button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button><span id="autoIncreaseEnabled"></span>
 <div class="ProductionSpeed">
     <input type="range" min="1" max="100" value="1" class="slider" id="productionspeedid">
     <span id="productionSpeedInPercent"></span>
   </div>
+<div>Power usage: <span id="electricityConsumption"></span>Wh per Monoblock</div>
 <div class="counter">Granules available: <span id="granulesavailableSpanTag">10</span></div>
 <button onclick="buyGranules()">Buy Granules</button>
 <button onclick="toggleAutobuyGranules()">Toggle automatic Buy Granules</button><span id="autobuyGranulesEnabled"></span>
@@ -30,6 +31,7 @@
 <button onclick="sell()">Sell Monobloc</button>
 <div id="placeholderForAsciiArt"></div>
 <div id="errorMessagesId"></div>
+<div id="infoMessagesId"></div>
 
 <!-- Einbinden der separaten JavaScript-Datei -->
 <script src="asciiArt.js"></script>
@@ -38,9 +40,11 @@
     let intervalId;          // ID des Timers. Hätte man bspw. 2 Timer, könnte man durch die ID sagen, welchen man stoppen will
     let intervalTime = 1000; // Zeit in Milisekunden, die vergeht, bis nächster Monobloc gebaut wird
     let granulesavailable = 10;
-    let money = 30;
+    let money = 30.0;
     let autoIncreaseEnabled = false;
     let autobuyGranulesEnabled = false;
+    let electricityConsumptionInWh = 0.0;
+    let cumulatedElectricityConsumptionInWh = 0.0;
     var slider = document.getElementById("productionspeedid");
 
 
@@ -50,22 +54,12 @@
         document.getElementById("money").textContent = money;
         showEnabledDisabled(autobuyGranulesEnabled, "autobuyGranulesEnabled");
         showEnabledDisabled(autoIncreaseEnabled, "autoIncreaseEnabled");
- /*       if(autobuyGranulesEnabled == true){
-            document.getElementById("autobuyGranulesEnabled").textContent = "Enabled";
-        }
-        else{
-            document.getElementById("autobuyGranulesEnabled").textContent = "Disabled";
-        }
-        if(autoIncreaseEnabled == true){
-            document.getElementById("autoIncreaseEnabled").textContent = "Enabled";
-        }
-        else{
-            document.getElementById("autoIncreaseEnabled").textContent = "Disabled";
-        }*/
         document.getElementById("productionSpeedInPercent").innerText = slider.value + "%";
         document.getElementById("errorMessagesId").innerText="";
         document.getElementById("errorMessagesId").style.color = "Red";
+        document.getElementById("electricityConsumption").innerText = electricityConsumptionInWh;
     }
+
     function showEnabledDisabled(isEnabled,id){
         if(isEnabled == true){
             document.getElementById(id).textContent = "Enabled";
@@ -75,11 +69,12 @@
         }
     }
 
-    function increaseCounter() {
+    function produceMonobloc() {
         if (granulesavailable>0){  //verhindert dass Granulat unter 0 Geht 
                                
             countMonobloc++;        //Neuer Monobloc
             granulesavailable--;    //Ein Granulat weniger
+            cumulatedElectricityConsumptionInWh += electricityConsumptionInWh;
             checkAndBuyGranules();  //Wenn autobuy an ist: Gegebenenfalls nachkaufen
             updateDisplay();        //Alle werte im HTML setzen
         }
@@ -95,20 +90,34 @@
         autoIncreaseEnabled = !autoIncreaseEnabled;
         updateDisplay();
         if (autoIncreaseEnabled) {
-            intervalId = setInterval(increaseCounter, intervalTime);
+            intervalId = setInterval(produceMonobloc, intervalTime);
         } else {
             clearInterval(intervalId);
                }
     }
 
     slider.oninput = function() {
-        intervalTime = 100-this.value;
-        console.log(this.value);
+        let slidervalue = parseInt(this.value);
+        intervalTime = 100-slidervalue;
+
+        calculateElectricityConsumption();
+        
         if (autoIncreaseEnabled) {
             clearInterval(intervalId);
-            intervalId = setInterval(increaseCounter, intervalTime);
+            intervalId = setInterval(produceMonobloc, intervalTime);
         }
         updateDisplay();
+    }
+
+    function calculateElectricityConsumption(){
+        var slidervalue = parseInt(slider.value)
+        
+        electricityConsumptionInWh = 200 
+
+        if(autoIncreaseEnabled){
+            //Wenn der Autobuilder läuft, wird mehr Strom pro Monobloc verbraucht
+            electricityConsumptionInWh += (slidervalue * slidervalue)/10;
+        }
     }
 
     function increaseSpeed() {
@@ -118,7 +127,7 @@
             if (autoIncreaseEnabled) {
                 //Stoppen des alten Timers (Mit der alten Milisekunden Zahl) und Starten eines neuen Timers
                 clearInterval(intervalId);
-                intervalId = setInterval(increaseCounter, intervalTime);
+                intervalId = setInterval(produceMonobloc, intervalTime);
             }
         }
     }
@@ -128,9 +137,18 @@
             intervalTime += 100;
             if (autoIncreaseEnabled) {
                 clearInterval(intervalId);
-                intervalId = setInterval(increaseCounter, intervalTime);
+                intervalId = setInterval(produceMonobloc, intervalTime);
             }
         }
+    }
+
+    function payBillForElectricity(){
+        var electricityCost = (cumulatedElectricityConsumptionInWh / 1000) * 0.30;
+        money -= electricityCost;
+        console.log(electricityCost)
+        console.log(typeof electricityCost)
+        document.getElementById("infoMessagesId").innerText="Letzte Stromrechnung: " + electricityCost + "€";
+        cumulatedElectricityConsumptionInWh = 0
     }
 
     function buyGranules() {
@@ -173,6 +191,8 @@
 
     //Alles, was ganz zu Beginn einmal passiert
     function initialize(){
+        calculateElectricityConsumption();
+        setInterval(payBillForElectricity, 1000*5);
         updateDisplay();
         //Hier machen wir .innerHTML, damit der die <br> Tags verarbeitet, statt sie anzuzeigen
         document.getElementById("placeholderForAsciiArt").innerHTML = getAsciiArt();
