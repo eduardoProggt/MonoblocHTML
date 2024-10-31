@@ -15,7 +15,7 @@
 
 <div class="counter">Monoblocs 🪑 in Stock: <span id="countMonoblocSpanTag">0</span></div>
 <button onclick="increaseCounter()">Make Monobloc</button>
-<button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button>
+<button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button><span id="autoIncreaseEnabled"></span>
 <div class="ProductionSpeed">
     <input type="range" min="1" max="100" value="1" class="slider" id="productionspeedid">
   </div>
@@ -53,6 +53,12 @@
         else{
             document.getElementById("autobuyGranulesEnabled").textContent = "Disabled";
         }
+        if(autoIncreaseEnabled == true){
+            document.getElementById("autoIncreaseEnabled").textContent = "Enabled";
+        }
+        else{
+            document.getElementById("autoIncreaseEnabled").textContent = "Disabled";
+        }
         document.getElementById("errorMessagesId").innerText="";
         document.getElementById("errorMessagesId").style.color = "Red";
     }
@@ -75,6 +81,7 @@
 
     function toggleAutoIncrease() {
         autoIncreaseEnabled = !autoIncreaseEnabled;
+        updateDisplay();
         if (autoIncreaseEnabled) {
             intervalId = setInterval(increaseCounter, intervalTime);
         } else {
