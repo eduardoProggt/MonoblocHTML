@@ -13,25 +13,25 @@
 </head>
 <body>
 
-<div class="counter">Monoblocs 🪑 in Stock: <span id="countMonoblocSpanTag">0</span></div>
-<button onclick="produceMonobloc()">Make Monobloc</button>
-<button onclick="toggleAutoIncrease()">Toggle Automatic Monobloc Production</button><span id="autoIncreaseEnabled"></span>
-<div class="ProductionSpeed">
+<div class="counter">Monoblocs 🪑 in Stock: <span id="countMonoblocTag">0</span></div>
+<button onclick="produceMonobloc(true)">Make Monobloc</button>
+<button onclick="toggleAutoProduction()">Toggle Automatic Monobloc Production</button><span id="autoProductionEnabledTag"></span>
+<div>
     <input type="range" min="1" max="100" value="1" class="slider" id="productionspeedid">
-    <span id="productionSpeedInPercent"></span>
-  </div>
-<div>Power usage: <span id="electricityConsumption"></span>Wh per Monoblock</div>
-<div class="counter">Granules available: <span id="granulesavailableSpanTag">10</span></div>
+    <span id="productionSpeedInPercentTag"></span>
+</div>
+<div>Power usage: <span id="electricityConsumptionTag"></span>Wh per Monoblock</div>
+<div class="counter">Granules available: <span id="granulesAvailableSpanTag">10</span></div>
 <button onclick="buyGranules()">Buy Granules</button>
-<button onclick="toggleAutobuyGranules()">Toggle automatic Buy Granules</button><span id="autobuyGranulesEnabled"></span>
-<!--<button onclick="autobuyGranules()">Toggle automatic Buy Granules</button>-->
-<br><br>
-<div class="counter">Available Funds: <span id="money">1000</span> $</div>
+<button onclick="toggleAutobuyGranules()">Toggle automatic Buy Granules</button><span id="autobuyGranulesEnabledTag"></span>
+<br>
+<br>
+<div class="counter">Available Funds: <span id="moneySpanTag"></span> $</div>
 <br>
 <button onclick="sell()">Sell Monobloc</button>
-<div id="placeholderForAsciiArt"></div>
-<div id="errorMessagesId"></div>
-<div id="infoMessagesId"></div>
+<div id="asciiArt"></div>
+<div id="errorMessagesTag"></div>
+<div id="infoMessagesTag"></div>
 
 <!-- Einbinden der separaten JavaScript-Datei -->
 <script src="asciiArt.js"></script>
@@ -39,9 +39,9 @@
     let countMonobloc = 0;
     let intervalId;          // ID des Timers. Hätte man bspw. 2 Timer, könnte man durch die ID sagen, welchen man stoppen will
     let intervalTime = 1000; // Zeit in Milisekunden, die vergeht, bis nächster Monobloc gebaut wird
-    let granulesavailable = 10;
+    let granulesAvailable = 10;
     let money = 30.0;
-    let autoIncreaseEnabled = false;
+    let autoProductionEnabled = false;
     let autobuyGranulesEnabled = false;
     let electricityConsumptionInWh = 0.0;
     let cumulatedElectricityConsumptionInWh = 0.0;
@@ -49,72 +49,73 @@
 
 
     function updateDisplay() {
-        document.getElementById("countMonoblocSpanTag").textContent = countMonobloc;
-        document.getElementById("granulesavailableSpanTag").textContent = granulesavailable;
-        document.getElementById("money").textContent = money;
-        showEnabledDisabled(autobuyGranulesEnabled, "autobuyGranulesEnabled");
-        showEnabledDisabled(autoIncreaseEnabled, "autoIncreaseEnabled");
-        document.getElementById("productionSpeedInPercent").innerText = slider.value + "%";
-        document.getElementById("errorMessagesId").innerText="";
-        document.getElementById("errorMessagesId").style.color = "Red";
-        document.getElementById("electricityConsumption").innerText = electricityConsumptionInWh;
+        document.getElementById("countMonoblocTag").textContent = countMonobloc;
+        document.getElementById("granulesAvailableSpanTag").textContent = granulesAvailable;
+        document.getElementById("moneySpanTag").textContent = money.toFixed(2);
+        showEnabledDisabled("autobuyGranulesEnabledTag", autobuyGranulesEnabled);
+        showEnabledDisabled("autoProductionEnabledTag", autoProductionEnabled);
+        document.getElementById("productionSpeedInPercentTag").innerText = slider.value + "%";
+        document.getElementById("errorMessagesTag").innerText="";
+        document.getElementById("errorMessagesTag").style.color = "Red";
+        document.getElementById("electricityConsumptionTag").innerText = electricityConsumptionInWh;
     }
 
-    function showEnabledDisabled(isEnabled,id){
+    function showEnabledDisabled(elementId, isEnabled){
         if(isEnabled == true){
-            document.getElementById(id).textContent = "Enabled";
+            document.getElementById(elementId).textContent = "Enabled";
         }
         else{
-            document.getElementById(id).textContent = "Disabled";
+            document.getElementById(elementId).textContent = "Disabled";
         }
     }
-
-    function produceMonobloc() {
-        if (granulesavailable>0){  //verhindert dass Granulat unter 0 Geht 
+    // Der Parameter isProducedManually gibt an, ob der Monobloc durch klicken oder 
+    // durch den autoBuilder erzeugt wurde - dies ist für die Kalkulation 
+    // des Stromverbraucs relevant
+    function produceMonobloc(isProducedManually) {
+        if (granulesAvailable>0){  //verhindert dass Granulat unter 0 Geht 
                                
             countMonobloc++;        //Neuer Monobloc
-            granulesavailable--;    //Ein Granulat weniger
+            granulesAvailable--;    //Ein Granulat weniger
+            calculateElectricityConsumption(isProducedManually);
             cumulatedElectricityConsumptionInWh += electricityConsumptionInWh;
             checkAndBuyGranules();  //Wenn autobuy an ist: Gegebenenfalls nachkaufen
             updateDisplay();        //Alle werte im HTML setzen
         }
         else { //Wenn kein Granulat mehr da:
             clearInterval(intervalId);  //Stoppen des Timers, der automatisch Monoblocs baut
-            autoIncreaseEnabled = false;//Deaktivieren der Variable, die ausgibt, ob autobuilder an ist
+            autoProductionEnabled = false;//Deaktivieren der Variable, die ausgibt, ob autobuilder an ist
             
             displayErrorMessage("No more granules available, buy new granules");
         }
     }
 
-    function toggleAutoIncrease() {
-        autoIncreaseEnabled = !autoIncreaseEnabled;
+    function toggleAutoProduction() {
+        autoProductionEnabled = !autoProductionEnabled;
         updateDisplay();
-        if (autoIncreaseEnabled) {
-            intervalId = setInterval(produceMonobloc, intervalTime);
+        if (autoProductionEnabled) {
+            intervalId = setInterval(produceMonobloc, intervalTime, false);
         } else {
             clearInterval(intervalId);
-               }
+        }
     }
 
     slider.oninput = function() {
         let slidervalue = parseInt(this.value);
         intervalTime = 100-slidervalue;
-
-        calculateElectricityConsumption();
         
-        if (autoIncreaseEnabled) {
+        if (autoProductionEnabled) {
             clearInterval(intervalId);
-            intervalId = setInterval(produceMonobloc, intervalTime);
+            intervalId = setInterval(produceMonobloc, intervalTime, false);
         }
         updateDisplay();
     }
 
-    function calculateElectricityConsumption(){
+    function calculateElectricityConsumption(isProducedManually){
         var slidervalue = parseInt(slider.value)
         
         electricityConsumptionInWh = 200 
 
-        if(autoIncreaseEnabled){
+        if(!isProducedManually){
             //Wenn der Autobuilder läuft, wird mehr Strom pro Monobloc verbraucht
             electricityConsumptionInWh += (slidervalue * slidervalue)/10;
         }
@@ -124,7 +125,7 @@
         //intervalTime: Zeit in Millisekunden, die vergeht, bis nächster Monobloc gebaut wird
         if (intervalTime > 100) { // schneller als 1x pro 100ms kann der Autobuilder nicht werden
             intervalTime -= 100;
-            if (autoIncreaseEnabled) {
+            if (autoProductionEnabled) {
                 //Stoppen des alten Timers (Mit der alten Milisekunden Zahl) und Starten eines neuen Timers
                 clearInterval(intervalId);
                 intervalId = setInterval(produceMonobloc, intervalTime);
@@ -135,7 +136,7 @@
     function decreaseSpeed() {
         if (intervalTime < 1000) { // langsamer als 1x pro 1000ms (1Sekunde) kann der Autobuilder nicht werden
             intervalTime += 100;
-            if (autoIncreaseEnabled) {
+            if (autoProductionEnabled) {
                 clearInterval(intervalId);
                 intervalId = setInterval(produceMonobloc, intervalTime);
             }
@@ -145,16 +146,15 @@
     function payBillForElectricity(){
         var electricityCost = (cumulatedElectricityConsumptionInWh / 1000) * 0.30;
         money -= electricityCost;
-        console.log(electricityCost)
-        console.log(typeof electricityCost)
-        document.getElementById("infoMessagesId").innerText="Letzte Stromrechnung: " + electricityCost + "€";
-        cumulatedElectricityConsumptionInWh = 0
+        document.getElementById("infoMessagesTag").innerText="Electricity bill: " + electricityCost.toFixed(2) + "$";
+        cumulatedElectricityConsumptionInWh = 0;
+        updateDisplay();
     }
 
     function buyGranules() {
         if(money > 0)
         {
-            granulesavailable+=10;
+            granulesAvailable+=10;
             money--;
             updateDisplay();
         }
@@ -184,7 +184,7 @@
 
     function checkAndBuyGranules() {
         //Wenn autobuyer an und wir keine Granules mehr haben: Versuche, welche zu kaufen
-        if (autobuyGranulesEnabled == true && granulesavailable < 1) {
+        if (autobuyGranulesEnabled == true && granulesAvailable < 1) {
             buyGranules();
         }
     }
@@ -195,14 +195,14 @@
         setInterval(payBillForElectricity, 1000*5);
         updateDisplay();
         //Hier machen wir .innerHTML, damit der die <br> Tags verarbeitet, statt sie anzuzeigen
-        document.getElementById("placeholderForAsciiArt").innerHTML = getAsciiArt();
+        document.getElementById("asciiArt").innerHTML = getAsciiArt();
         //Machen wir den Stuhl etwas kleiner: 5 Pixel pro Zeichen
-        document.getElementById("placeholderForAsciiArt").style.fontSize="5px";
+        document.getElementById("asciiArt").style.fontSize="5px";
     }
 
     function displayErrorMessage(message){
-        if(!document.getElementById("errorMessagesId").innerText.includes(message)){
-            document.getElementById("errorMessagesId").innerText += "\n"+message;
+        if(!document.getElementById("errorMessagesTag").innerText.includes(message)){
+            document.getElementById("errorMessagesTag").innerText += "\n"+message;
         }
     }
 
