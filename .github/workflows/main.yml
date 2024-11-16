@@ -23,7 +23,7 @@ jobs:
           remoteDir: ~/public_html/m0nobloc/
   docker-build:
     runs-on: ubuntu-latest
-
+    needs: ftp-deploy
     steps:  
       - name: Ssh
         uses: webfactory/ssh-agent@v0.5.3
@@ -35,6 +35,7 @@ jobs:
         with:
           host: ${{ secrets.FTP_HOST }}  
           username: ${{ secrets.FTP_USERNAME }}  
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Executing Docker Script"
             ${{ secrets.DOCKER_SCRIPT }}  
